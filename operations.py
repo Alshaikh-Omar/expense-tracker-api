@@ -2,7 +2,7 @@ from database import get_connection
 from datetime import date
 from passlib.hash import bcrypt
 import csv
-
+import sqlite3
 def create_user(username, password):
     conn = get_connection()
     cursor = conn.cursor()
@@ -16,8 +16,13 @@ def create_user(username, password):
         )
         conn.commit()
         return True
-    except:
+
+    except sqlite3.IntegrityError:
         return False
+    except Exception as e:
+        print("Unexpected error:", e)
+        return False
+
     finally:
         conn.close()
 
