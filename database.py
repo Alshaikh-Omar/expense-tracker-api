@@ -3,16 +3,17 @@ DB = sqlite3.connect('expenses.db')
 def get_connection():
     return sqlite3.connect('expenses.db')
 
-def create_table():
-    conn = sqlite3.connect('expenses.db')
+def create_user_table():
+    conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute("""
-     CREATE TABLE IF NOT EXISTS expenses (
+     CREATE TABLE IF NOT EXISTS users (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
-     expense TEXT NOT NULL,
-     amount REAL NOT NULL,
-     date TEXT NOT NULL
+     username TEXT UNIQUE,
+     password TEXT
      )
      """)
+
     conn.commit()
     conn.close()

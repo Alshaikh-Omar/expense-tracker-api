@@ -1,6 +1,39 @@
 from database import get_connection
 from datetime import date
+from passlib.hash import bcrypt
 import csv
+
+def create_user(username, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    hashed_password = bcrypt.hash(password)
+
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, hashed_password)
+        )
+        conn.commit()
+        return True
+    except:
+        return False
+    finally:
+        conn.close()
+
+def verify_user(username, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    user = cursor.execute(
+        "SELECT password FROM users WHERE username = ?",
+        (username,)
+    ).fetchone()
+
+    if user and bcrypt.verify(password, user[0]):
+        return True
+
+    return False
 
 def add_expense(expense, amount, category):
 

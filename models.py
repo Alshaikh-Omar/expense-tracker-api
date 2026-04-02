@@ -13,3 +13,6 @@ class ExpenseOut(BaseModel):
     category: str
     date: str
 
+class User(BaseModel):
+    username: str
+    password: str
