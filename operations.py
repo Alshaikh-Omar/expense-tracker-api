@@ -3,6 +3,7 @@ from datetime import date
 from passlib.hash import bcrypt
 import csv
 import sqlite3
+
 def create_user(username, password):
     conn = get_connection()
     cursor = conn.cursor()
@@ -40,28 +41,31 @@ def verify_user(username, password):
 
     return False
 
-def add_expense(expense, amount, category):
+def add_expense(expense, amount, category, user_id):
 
     conn = get_connection()
     cursor = conn.cursor()
+
+
     cursor.execute(
-        "INSERT INTO expenses (expense, amount, category, date) VALUES (?,?,?,?)",
-        (expense, amount, category, date.today().isoformat())
+        "INSERT INTO expenses (expense, amount, category, date, user_id) VALUES (? ,? ,? ,?, ?)",
+        (expense, amount, category, date.today().isoformat(), user_id)
     )
 
     conn.commit()
     conn.close()
+
     print("Successfully added expense\n")
 
-def get_all_expenses(limit: int = 5, offset: int = 0, sort_by= "id", category= None):
+def get_all_expenses(user_id, limit: int = 5, offset: int = 0, sort_by= "id", category= None):
     conn = get_connection()
     cursor = conn.cursor()
-    query = "SELECT rowid, expense, amount, category, date FROM expenses"
-    params = []
+    query = "SELECT rowid, expense, amount, category, date FROM expenses WHERE user_id = ?"
+    params = [user_id]
 
     # filter by category
     if category:
-        query += " WHERE category = ?"
+        query += " AND category = ?"
         params.append(category)
 
     # sorting
@@ -92,12 +96,12 @@ def get_all_expenses(limit: int = 5, offset: int = 0, sort_by= "id", category= N
     ]
 
 
-def delete_expense(expense_id):
+def delete_expense(expense_id, user_id):
 
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "DELETE FROM expenses WHERE rowid = ?", (expense_id,)
+        "DELETE FROM expenses WHERE rowid = ? AND user_id = ?", (expense_id, user_id)
     )
     conn.commit()
 
@@ -135,42 +139,52 @@ def monthly_spent():
         print(f"this month's total: {total:.2f}\n")
 
 
-def search_expenses(keyword):
+def search_expenses(keyword, user_id):
     conn = get_connection()
     cursor = conn.cursor()
+
+    keyword = keyword.strip().lower()
+
     rows = cursor.execute(
-        "SELECT rowid, expense, amount, category, date FROM expenses WHERE expense LIKE ? OR category LIKE ?",
-        (f"%{keyword}%", f"%{keyword}%")
-    ).fetchall()
+        """
+        SELECT rowid, expense, amount, category, date
+        FROM expenses
+        WHERE user_id = ?
+        AND (
+            LOWER(TRIM(expense)) LIKE ?
+            OR LOWER(TRIM(category)) LIKE ?
+        )
+        """,
+        (user_id, f"%{keyword}%", f"%{keyword}%")).fetchall()
 
     conn.close()
 
     return [
         {
-            "ID": row[0],
+            "id": row[0],
             "expense": row[1],
             "amount": row[2],
             "category": row[3],
-            "date": row[4]
+            "date": row[4] or ""
         }
         for row in rows
     ]
-
-def get_expense(expense_id):
+def get_expense(expense_id, user_id):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    row = cursor.execute("""SELECT expense, amount, category FROM expenses WHERE rowid = ?""", (expense_id,)).fetchone()
+    row = cursor.execute("""SELECT rowid, expense, amount, category FROM expenses WHERE rowid = ? AND user_id = ?""", (expense_id, user_id)).fetchone()
 
     conn.close()
 
     return row
 
-def edit_expense(expense_id, new_name, new_amount, new_category):
+def edit_expense(expense_id, new_name, new_amount, new_category, user_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(""" UPDATE expenses SET expense = ?, amount = ?, category = ? WHERE rowid = ? """, (new_name, new_amount, new_category, expense_id))
+    cursor.execute(""" UPDATE expenses SET expense = ?, amount = ?, category = ? WHERE rowid = ? AND user_id = ? """,
+                   (new_name, new_amount, new_category, expense_id, user_id))
 
     conn.commit()
 
@@ -205,10 +219,10 @@ def category_stats():
         print(f"{row[0]:<8} | {row[1]:.2f}")
     print()
 
-def get_expense_by_id(expense_id):
+def get_expense_by_id(expense_id, user_id):
     conn = get_connection()
     cursor = conn.cursor()
-    row = cursor.execute("SELECT rowid, expense, amount, category, date FROM expenses WHERE rowid = ?", (expense_id,)).fetchone()
+    row = cursor.execute("SELECT rowid, expense, amount, category, date FROM expenses WHERE rowid = ? AND user_id = ?", (expense_id, user_id)).fetchone()
     conn.close()
 
     if row is None:
