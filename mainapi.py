@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, HTTPException, Depends
 from models import Expense, ExpenseOut, User, ExpenseListResponse
 from operations import (get_all_expenses, add_expense, delete_expense, edit_expense, search_expenses, get_expense_by_id, create_user, verify_user)
@@ -80,7 +82,9 @@ def create_expense(exp: Expense, user=Depends(get_current_user)):
 
 @app.delete("/expenses/{expense_id}", status_code=200)
 def delete_expense_api(expense_id: int, user=Depends(get_current_user)):
-    delete_expense(expense_id, user)
+    success = delete_expense(expense_id, user)
+    if not success:
+        raise HTTPException(status_code=404, detail="Expense not found")
 
     return {"message": f"Expense deleted by {user}"}
 

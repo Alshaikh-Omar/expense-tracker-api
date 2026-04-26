@@ -2,10 +2,14 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException
+import os
 
-SECRET_KEY = "47012388c71efa5bda10ae0b8b34e34e6542287715aa11bb50af28e5b68273ac"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set")
 
 security = HTTPBearer()
 
