@@ -101,7 +101,7 @@ def delete_expense(expense_id, user_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "DELETE FROM expenses WHERE rowid = ? AND user_id = ?", (expense_id, user_id)
+        "DELETE FROM expenses WHERE id = ? AND user_id = ?", (expense_id, user_id)
     )
     conn.commit()
 

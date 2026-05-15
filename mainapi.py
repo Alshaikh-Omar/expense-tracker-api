@@ -16,7 +16,7 @@ def fake_auth(username: str, password: str):
     if not valid:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-@app.post("/register")
+@app.post("pip/register")
 def register(user: User):
     success = create_user(user.username, user.password)
 
