@@ -9,7 +9,11 @@ from auth import create_access_token, get_current_user
 create_user_table()
 create_table()
 
-app = FastAPI()
+app = FastAPI(
+    servers=[
+        {"url": "https://expense-tracker-api-production-800b.up.railway.app", "description": "Production server"}
+    ]
+)
 
 def fake_auth(username: str, password: str):
     valid = verify_user(username, password)
