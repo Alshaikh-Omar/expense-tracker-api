@@ -9,18 +9,14 @@ from auth import create_access_token, get_current_user
 create_user_table()
 create_table()
 
-app = FastAPI(
-    servers=[
-        {"url": "https://expense-tracker-api-production-800b.up.railway.app", "description": "Production server"}
-    ]
-)
+app = FastAPI()
 
 def fake_auth(username: str, password: str):
     valid = verify_user(username, password)
     if not valid:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-@app.post("pip/register")
+@app.post("/register")
 def register(user: User):
     success = create_user(user.username, user.password)
 
